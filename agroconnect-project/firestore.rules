@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Profil pengguna: hanya pemilik akun yang bisa membuat/membaca/mengubah profilnya sendiri
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
+    // Produk: semua orang yang login bisa membaca daftar produk.
+    // Penjual pemilik bisa mengubah apa saja pada produknya.
+    // Pengguna lain (pembeli) hanya boleh mengubah field "stock" saat checkout.
+    match /products/{productId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+                     && request.resource.data.sellerUid == request.auth.uid;
+      allow update: if request.auth != null
+                     && (
+                       resource.data.sellerUid == request.auth.uid
+                       || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock'])
+                     );
+      allow delete: if request.auth != null
+                     && resource.data.sellerUid == request.auth.uid;
+    }
+
+    // Pesanan: pembeli hanya bisa membuat/membaca pesanannya sendiri
+    match /orders/{orderId} {
+      allow read: if request.auth != null
+                   && resource.data.buyerUid == request.auth.uid;
+      allow create: if request.auth != null
+                     && request.resource.data.buyerUid == request.auth.uid;
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}
