@@ -340,10 +340,7 @@ function AuthScreen({ pendingUser, onChooseRole, authError }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Top bar (shared)
-// ---------------------------------------------------------------------------
-function TopBar({ user, onLogout, cartCount, onCartClick }) {
+function TopBar({ user, onLogout, cartCount, onCartClick, onLoginClick }) {
   return (
     <header className="sticky top-0 z-10 bg-white border-b border-stone-200">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
@@ -355,43 +352,51 @@ function TopBar({ user, onLogout, cartCount, onCartClick }) {
         </div>
 
         <div className="flex items-center gap-3">
-          {user.role === "buyer" && (
-            <button
-              onClick={onCartClick}
-              className="relative w-10 h-10 rounded-xl border border-stone-200 flex items-center justify-center hover:bg-stone-50"
-              aria-label="Keranjang"
-            >
-              <ShoppingCart size={18} className="text-stone-600" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-[#2F6B3C] text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
-                  {cartCount}
+          {/* Tombol keranjang — selalu tampil */}
+          <button
+            onClick={onCartClick}
+            className="relative w-10 h-10 rounded-xl border border-stone-200 flex items-center justify-center hover:bg-stone-50"
+            aria-label="Keranjang"
+          >
+            <ShoppingCart size={18} className="text-stone-600" />
+            {cartCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-[#2F6B3C] text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </button>
+
+          {user ? (
+            <>
+              <div className="hidden sm:flex flex-col text-right">
+                <span className="text-sm font-medium text-stone-800 leading-tight">
+                  {user.role === "seller" ? user.storeName : user.name}
                 </span>
-              )}
+                <span className="text-xs text-stone-400 leading-tight">
+                  {user.role === "seller" ? "Akun Penjual" : "Akun Pembeli"}
+                </span>
+              </div>
+              <div className="w-9 h-9 rounded-full bg-[#F4E6C1] flex items-center justify-center text-[#2F6B3C] font-medium text-sm">
+                {(user.role === "seller" ? user.storeName : user.name)
+                  .charAt(0)
+                  .toUpperCase()}
+              </div>
+              <button
+                onClick={onLogout}
+                className="w-10 h-10 rounded-xl border border-stone-200 flex items-center justify-center hover:bg-stone-50"
+                aria-label="Keluar"
+              >
+                <LogOut size={17} className="text-stone-500" />
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={onLoginClick}
+              className="flex items-center gap-2 bg-[#2F6B3C] text-white rounded-xl px-4 py-2 text-sm font-medium hover:bg-[#27572F] transition-colors"
+            >
+              Masuk
             </button>
           )}
-
-          <div className="hidden sm:flex flex-col text-right">
-            <span className="text-sm font-medium text-stone-800 leading-tight">
-              {user.role === "seller" ? user.storeName : user.name}
-            </span>
-            <span className="text-xs text-stone-400 leading-tight">
-              {user.role === "seller" ? "Akun Penjual" : "Akun Pembeli"}
-            </span>
-          </div>
-
-          <div className="w-9 h-9 rounded-full bg-[#F4E6C1] flex items-center justify-center text-[#2F6B3C] font-medium text-sm">
-            {(user.role === "seller" ? user.storeName : user.name)
-              .charAt(0)
-              .toUpperCase()}
-          </div>
-
-          <button
-            onClick={onLogout}
-            className="w-10 h-10 rounded-xl border border-stone-200 flex items-center justify-center hover:bg-stone-50"
-            aria-label="Keluar"
-          >
-            <LogOut size={17} className="text-stone-500" />
-          </button>
         </div>
       </div>
     </header>
@@ -541,7 +546,7 @@ function CartPanel({ cart, products, onClose, onCheckout, onUpdateQty }) {
   );
 }
 
-function BuyerDashboard({ products, cart, setCart, showCart, setShowCart, buyerUid }) {
+function BuyerDashboard({ products, cart, setCart, showCart, setShowCart, buyerUid, onLoginRequired }) {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("Semua");
   const [checkoutMessage, setCheckoutMessage] = useState("");
@@ -554,6 +559,7 @@ function BuyerDashboard({ products, cart, setCart, showCart, setShowCart, buyerU
   });
 
   const addToCart = (product) => {
+    if (!buyerUid) { onLoginRequired?.(); return; }
     setCart((prev) => {
       const existing = prev.find((c) => c.id === product.id);
       if (existing) {
@@ -1089,6 +1095,7 @@ export default function AgroConnectApp() {
   const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const [authError, setAuthError] = useState("");
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Listen for login/logout
   useEffect(() => {
@@ -1162,8 +1169,8 @@ export default function AgroConnectApp() {
     setShowCart(false);
   };
 
-  // Loading state while checking auth/profile
-  if (!authChecked || (firebaseUser && !profileChecked)) {
+  // Loading state
+  if (!authChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F4E6C1]">
         <p className="text-sm text-stone-500">Memuat...</p>
@@ -1171,8 +1178,8 @@ export default function AgroConnectApp() {
     );
   }
 
-  // Not logged in, or logged in but hasn't picked a role yet
-  if (!firebaseUser || !profile) {
+  // Jika sudah login tapi belum pilih role
+  if (firebaseUser && authChecked && profileChecked && !profile) {
     return (
       <AuthScreen
         pendingUser={firebaseUser}
@@ -1182,37 +1189,66 @@ export default function AgroConnectApp() {
     );
   }
 
-  const user = {
-    name: profile.name,
-    email: profile.email,
-    role: profile.role,
-    storeName: profile.storeName,
-  };
+  // Jika sudah login sebagai penjual
+  if (profile && profile.role === "seller") {
+    return (
+      <div className="min-h-screen bg-[#FAF7F0]">
+        <TopBar
+          user={profile}
+          onLogout={handleLogout}
+          cartCount={0}
+          onCartClick={() => {}}
+          onLoginClick={() => setShowAuthModal(true)}
+        />
+        <SellerDashboard
+          products={products}
+          storeName={profile.storeName}
+          sellerUid={firebaseUser.uid}
+        />
+      </div>
+    );
+  }
 
+  // Semua orang (login atau tidak) bisa lihat produk
   return (
     <div className="min-h-screen bg-[#FAF7F0]">
       <TopBar
-        user={user}
-        onLogout={handleLogout}
+        user={profile}
+        onLogout={profile ? handleLogout : null}
         cartCount={cart.reduce((s, c) => s + c.qty, 0)}
-        onCartClick={() => setShowCart(true)}
+        onCartClick={() => {
+          if (!firebaseUser || !profile) {
+            setShowAuthModal(true);
+          } else {
+            setShowCart(true);
+          }
+        }}
+        onLoginClick={() => setShowAuthModal(true)}
       />
 
-      {user.role === "buyer" ? (
-        <BuyerDashboard
-          products={products}
-          cart={cart}
-          setCart={setCart}
-          showCart={showCart}
-          setShowCart={setShowCart}
-          buyerUid={firebaseUser.uid}
-        />
-      ) : (
-        <SellerDashboard
-          products={products}
-          storeName={user.storeName}
-          sellerUid={firebaseUser.uid}
-        />
+      <BuyerDashboard
+        products={products}
+        cart={cart}
+        setCart={setCart}
+        showCart={showCart}
+        setShowCart={setShowCart}
+        buyerUid={firebaseUser?.uid}
+        onLoginRequired={() => setShowAuthModal(true)}
+      />
+
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-30 px-4">
+          <div className="w-full max-w-md bg-white rounded-3xl shadow-lg">
+            <AuthScreen
+              pendingUser={firebaseUser}
+              onChooseRole={async (role) => {
+                await handleChooseRole(role);
+                setShowAuthModal(false);
+              }}
+              authError={authError}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
