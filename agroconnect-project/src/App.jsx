@@ -75,6 +75,76 @@ function Logo({ size = 40 }) {
 }
 
 // ---------------------------------------------------------------------------
+// Ilustrasi pertanian untuk halaman login
+// ---------------------------------------------------------------------------
+function FarmIllustration() {
+  return (
+    <svg
+      viewBox="0 0 600 800"
+      preserveAspectRatio="xMidYMid slice"
+      className="w-full h-full"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <linearGradient id="skyGradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FCE8C7" />
+          <stop offset="55%" stopColor="#F4E6C1" />
+          <stop offset="100%" stopColor="#EADFB4" />
+        </linearGradient>
+      </defs>
+      <rect width="600" height="800" fill="url(#skyGradient)" />
+      <circle cx="450" cy="160" r="80" fill="#F2B441" opacity="0.9" />
+      <circle cx="450" cy="160" r="120" fill="#F2B441" opacity="0.15" />
+      <g opacity="0.7" fill="#FFFFFF">
+        <ellipse cx="140" cy="130" rx="70" ry="26" />
+        <ellipse cx="100" cy="120" rx="45" ry="22" />
+        <ellipse cx="190" cy="120" rx="50" ry="24" />
+      </g>
+      <g stroke="#5E7A52" strokeWidth="4" strokeLinecap="round" fill="none" opacity="0.6">
+        <path d="M60 220 q12 -14 24 0 q12 -14 24 0" />
+        <path d="M180 260 q10 -12 20 0 q10 -12 20 0" />
+      </g>
+      <path d="M0 360 L120 260 L230 360 L330 270 L460 360 L600 280 L600 420 L0 420 Z" fill="#A9C49B" opacity="0.55" />
+      <path d="M0 430 L600 380 L600 480 L0 530 Z" fill="#7FAE63" />
+      <path d="M0 530 L600 480 L600 580 L0 630 Z" fill="#6B9E54" />
+      <path d="M0 630 L600 580 L600 690 L0 740 Z" fill="#588C46" />
+      <path d="M0 740 L600 690 L600 800 L0 800 Z" fill="#4A7B3C" />
+      <g stroke="#3E6B33" strokeWidth="3" opacity="0.35" fill="none">
+        <path d="M0 460 Q300 430 600 410" />
+        <path d="M0 560 Q300 530 600 510" />
+        <path d="M0 665 Q300 630 600 615" />
+      </g>
+      <g transform="translate(70 470)">
+        <rect x="-5" y="10" width="10" height="36" fill="#7A5230" />
+        <circle cx="0" cy="0" r="34" fill="#3F7A33" />
+        <circle cx="-18" cy="14" r="22" fill="#48893B" />
+        <circle cx="20" cy="12" r="24" fill="#2F6B3C" />
+      </g>
+      <g transform="translate(520 540)">
+        <rect x="-4" y="6" width="8" height="32" fill="#7A5230" />
+        <circle cx="0" cy="-2" r="28" fill="#48893B" />
+        <circle cx="16" cy="10" r="20" fill="#2F6B3C" />
+      </g>
+      <g fill="#9ED186">
+        {[0,1,2,3,4,5,6,7,8].map((i) => (
+          <g key={i} transform={`translate(${40 + i * 62} 700)`}>
+            <path d="M0 30 C-14 18 -16 -4 0 -16 C16 -4 14 18 0 30 Z" fill="#9ED186" />
+            <path d="M0 30 C-10 16 -4 -2 0 -10 C4 -2 10 16 0 30 Z" fill="#7FB868" />
+          </g>
+        ))}
+      </g>
+      <g transform="translate(440 700)">
+        <path d="M0 40 L100 40 L88 76 L12 76 Z" fill="#C4622D" />
+        <path d="M0 40 L100 40 L96 26 L4 26 Z" fill="#D8804B" />
+        <circle cx="30" cy="22" r="16" fill="#E0563B" />
+        <circle cx="56" cy="14" r="18" fill="#F2B441" />
+        <circle cx="78" cy="24" r="14" fill="#E0563B" />
+      </g>
+    </svg>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Kategori produk
 // ---------------------------------------------------------------------------
 const categories = [
@@ -142,69 +212,129 @@ function AuthScreen({ pendingUser, onChooseRole, authError }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F4E6C1] px-4">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-sm border border-stone-200 p-8">
-        <div className="flex flex-col items-center mb-8">
-          <Logo size={56} />
-          <h1 className="mt-4 text-2xl font-semibold text-stone-800">
-            AgroConnect
-          </h1>
-          <p className="mt-1 text-sm text-stone-500 text-center">
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-[#1F4A28]">
+        <FarmIllustration />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1F4A28]/80 via-transparent to-transparent" />
+        <div className="absolute bottom-12 left-10 right-10 text-white">
+          <div className="flex items-center gap-3 mb-4">
+            <Logo size={44} />
+            <span className="text-2xl font-bold tracking-tight">AgroConnect</span>
+          </div>
+          <h2 className="text-3xl font-bold leading-snug mb-3">
+            Pasar tani modern,<br />langsung dari kebun.
+          </h2>
+          <p className="text-white/75 text-sm leading-relaxed">
+            Jual hasil panen Anda, temukan produk segar terbaik — semua dalam satu platform digital yang mudah.
+          </p>
+          <div className="mt-6 flex gap-6">
+            <div>
+              <p className="text-2xl font-bold">500+</p>
+              <p className="text-xs text-white/60">Produk tersedia</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold">100%</p>
+              <p className="text-xs text-white/60">Produk lokal</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold">24/7</p>
+              <p className="text-xs text-white/60">Akses kapanpun</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col justify-center items-center px-6 py-12 bg-[#FAF7F0] min-h-screen lg:min-h-0">
+        <div className="flex flex-col items-center mb-8 lg:hidden">
+          <div className="flex items-center gap-3 mb-2">
+            <Logo size={44} />
+            <span className="text-2xl font-bold text-stone-800">AgroConnect</span>
+          </div>
+          <p className="text-sm text-stone-500 text-center">
             Pasar digital untuk petani dan pembeli hasil pertanian
           </p>
         </div>
 
-        {!pendingUser && (
-          <div className="space-y-4">
-            <GoogleButton
-              onClick={handleGoogleLogin}
-              label={loading ? "Memproses..." : "Masuk dengan Google"}
-            />
-            {authError && (
-              <p className="text-xs text-center text-red-500">{authError}</p>
-            )}
-            <p className="text-xs text-center text-stone-400">
-              Dengan masuk, Anda menyetujui Ketentuan Layanan dan Kebijakan
-              Privasi AgroConnect.
-            </p>
-          </div>
-        )}
+        <div className="w-full max-w-sm">
+          {!pendingUser && (
+            <div>
+              <div className="mb-8 hidden lg:block">
+                <h1 className="text-2xl font-bold text-stone-800 mb-1">
+                  Selamat datang 👋
+                </h1>
+                <p className="text-stone-500 text-sm">
+                  Masuk untuk mulai berjualan atau berbelanja produk pertanian.
+                </p>
+              </div>
+              <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+                <p className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-4">
+                  Masuk dengan
+                </p>
+                <GoogleButton
+                  onClick={handleGoogleLogin}
+                  label={loading ? "Memproses..." : "Lanjutkan dengan Google"}
+                />
+                {authError && (
+                  <p className="text-xs text-center text-red-500 mt-3">{authError}</p>
+                )}
+              </div>
+              <p className="text-xs text-center text-stone-400 mt-4 leading-relaxed">
+                Dengan masuk, Anda menyetujui{" "}
+                <span className="text-[#2F6B3C] font-medium">Ketentuan Layanan</span>{" "}
+                dan{" "}
+                <span className="text-[#2F6B3C] font-medium">Kebijakan Privasi</span>{" "}
+                AgroConnect.
+              </p>
+            </div>
+          )}
 
-        {pendingUser && (
-          <div className="space-y-4">
-            <p className="text-sm text-stone-600 text-center mb-2">
-              Pilih jenis akun Anda untuk melanjutkan
-            </p>
-            <button
-              onClick={() => onChooseRole("buyer")}
-              className="w-full flex items-center gap-4 border border-stone-200 rounded-2xl p-4 text-left hover:border-[#2F6B3C] hover:bg-[#F4E6C1]/40 transition-colors"
-            >
-              <div className="w-11 h-11 rounded-xl bg-[#F4E6C1] flex items-center justify-center">
-                <ShoppingCart size={22} className="text-[#2F6B3C]" />
-              </div>
-              <div>
-                <p className="font-medium text-stone-800">Akun Pembeli</p>
-                <p className="text-xs text-stone-500">
-                  Jelajahi dan beli produk pertanian
+          {pendingUser && (
+            <div>
+              <div className="mb-6 hidden lg:block">
+                <h1 className="text-2xl font-bold text-stone-800 mb-1">
+                  Satu langkah lagi ✨
+                </h1>
+                <p className="text-stone-500 text-sm">
+                  Pilih jenis akun untuk melanjutkan ke AgroConnect.
                 </p>
               </div>
-            </button>
-            <button
-              onClick={() => onChooseRole("seller")}
-              className="w-full flex items-center gap-4 border border-stone-200 rounded-2xl p-4 text-left hover:border-[#2F6B3C] hover:bg-[#F4E6C1]/40 transition-colors"
-            >
-              <div className="w-11 h-11 rounded-xl bg-[#F4E6C1] flex items-center justify-center">
-                <Store size={22} className="text-[#2F6B3C]" />
+              <div className="mb-6 lg:hidden text-center">
+                <h2 className="text-lg font-bold text-stone-800 mb-1">Satu langkah lagi ✨</h2>
+                <p className="text-sm text-stone-500">Pilih jenis akun Anda.</p>
               </div>
-              <div>
-                <p className="font-medium text-stone-800">Akun Penjual</p>
-                <p className="text-xs text-stone-500">
-                  Jual hasil pertanian dan kelola produk
-                </p>
+              <div className="space-y-3">
+                <button
+                  onClick={() => onChooseRole("buyer")}
+                  className="w-full flex items-center gap-4 bg-white border-2 border-stone-200 rounded-2xl p-4 text-left hover:border-[#2F6B3C] hover:bg-[#F4E6C1]/30 transition-all group"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-[#F4E6C1] flex items-center justify-center group-hover:bg-[#2F6B3C]/10 transition-colors shrink-0">
+                    <ShoppingCart size={22} className="text-[#2F6B3C]" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-stone-800">Saya ingin berbelanja</p>
+                    <p className="text-xs text-stone-500 mt-0.5">
+                      Temukan dan beli produk pertanian segar
+                    </p>
+                  </div>
+                </button>
+                <button
+                  onClick={() => onChooseRole("seller")}
+                  className="w-full flex items-center gap-4 bg-white border-2 border-stone-200 rounded-2xl p-4 text-left hover:border-[#2F6B3C] hover:bg-[#F4E6C1]/30 transition-all group"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-[#F4E6C1] flex items-center justify-center group-hover:bg-[#2F6B3C]/10 transition-colors shrink-0">
+                    <Store size={22} className="text-[#2F6B3C]" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-stone-800">Saya ingin berjualan</p>
+                    <p className="text-xs text-stone-500 mt-0.5">
+                      Jual hasil pertanian dan kelola toko Anda
+                    </p>
+                  </div>
+                </button>
               </div>
-            </button>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
