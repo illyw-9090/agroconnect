@@ -454,7 +454,7 @@ function ProductCard({ product, onAddToCart }) {
   );
 }
 
-function CartPanel({ cart, products, onClose, onCheckout, onUpdateQty }) {
+function CartPanel({ cart, products, onClose, onCheckout, onUpdateQty, sellerPaymentInfo }) {
   const items = cart.map((c) => {
     const p = products.find((p) => p.id === c.id);
     return { ...c, product: p };
@@ -533,12 +533,40 @@ function CartPanel({ cart, products, onClose, onCheckout, onUpdateQty }) {
                 {formatRupiah(total)}
               </span>
             </div>
+
+            {sellerPaymentInfo?.noRek && (
+              <div className="bg-[#F4E6C1]/50 rounded-xl p-3 mb-4 border border-stone-200">
+                <p className="text-xs font-medium text-stone-600 mb-2">Info Pembayaran:</p>
+                <p className="text-sm font-semibold text-stone-800">
+                  {sellerPaymentInfo.bank} — {sellerPaymentInfo.noRek}
+                </p>
+                <p className="text-xs text-stone-500">a.n. {sellerPaymentInfo.atasNama}</p>
+              </div>
+            )}
+
             <button
               onClick={onCheckout}
-              className="w-full bg-[#2F6B3C] text-white rounded-xl py-3 text-sm font-medium hover:bg-[#27572F] transition-colors"
+              className="w-full bg-[#2F6B3C] text-white rounded-xl py-3 text-sm font-medium hover:bg-[#27572F] transition-colors mb-2"
             >
-              Checkout
+              Konfirmasi Pesanan
             </button>
+
+            {sellerPaymentInfo?.noWa && (
+              <a
+              
+                href={`https://wa.me/62${sellerPaymentInfo.noWa.replace(/^0/, "")}?text=${encodeURIComponent(
+                  `Halo, saya ingin konfirmasi pembayaran pesanan senilai ${formatRupiah(total)}. Mohon diproses ya 🙏`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-2 border border-[#25D366] text-[#25D366] rounded-xl py-3 text-sm font-medium hover:bg-[#25D366]/10 transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+                Konfirmasi via WhatsApp
+              </a>
+            )}
           </div>
         )}
       </div>
@@ -550,6 +578,25 @@ function BuyerDashboard({ products, cart, setCart, showCart, setShowCart, buyerU
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("Semua");
   const [checkoutMessage, setCheckoutMessage] = useState("");
+
+  const [sellerPaymentInfo, setSellerPaymentInfo] = useState(null);
+
+  useEffect(() => {
+    const fetchSellerPayment = async () => {
+      if (cart.length === 0) return;
+      const firstProduct = products.find(p => p.id === cart[0].id);
+      if (!firstProduct?.sellerUid) return;
+      try {
+        const snap = await getDoc(doc(db, "users", firstProduct.sellerUid));
+        if (snap.exists() && snap.data().paymentInfo) {
+          setSellerPaymentInfo(snap.data().paymentInfo);
+        }
+      } catch (err) {
+        console.error("Gagal fetch info pembayaran:", err);
+      }
+    };
+    fetchSellerPayment();
+  }, [cart, products]);
 
   const filtered = products.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
@@ -672,6 +719,9 @@ function BuyerDashboard({ products, cart, setCart, showCart, setShowCart, buyerU
           onClose={() => setShowCart(false)}
           onCheckout={checkout}
           onUpdateQty={updateQty}
+          sellerPaymentInfo={products.find(p => cart[0] && p.id === cart[0].id)?.sellerUid
+            ? undefined
+            : undefined}
         />
       )}
 
@@ -896,6 +946,34 @@ function DiscountModal({ product, onClose, onSave }) {
 function SellerDashboard({ products, storeName, sellerUid }) {
   const [showForm, setShowForm] = useState(false);
   const [discountTarget, setDiscountTarget] = useState(null);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState({ bank: "", noRek: "", noWa: "", atasNama: "" });
+  const [paymentSaved, setPaymentSaved] = useState(false);
+
+  useEffect(() => {
+    const loadPaymentInfo = async () => {
+      try {
+        const snap = await getDoc(doc(db, "users", sellerUid));
+        if (snap.exists() && snap.data().paymentInfo) {
+          setPaymentInfo(snap.data().paymentInfo);
+        }
+      } catch (err) {
+        console.error("Gagal memuat info pembayaran:", err);
+      }
+    };
+    loadPaymentInfo();
+  }, [sellerUid]);
+
+  const savePaymentInfo = async () => {
+    try {
+      await updateDoc(doc(db, "users", sellerUid), { paymentInfo });
+      setPaymentSaved(true);
+      setTimeout(() => setPaymentSaved(false), 3000);
+      setShowPaymentForm(false);
+    } catch (err) {
+      console.error("Gagal menyimpan info pembayaran:", err);
+    }
+  };
 
   const myProducts = products.filter((p) => p.sellerUid === sellerUid);
 
@@ -949,6 +1027,31 @@ function SellerDashboard({ products, storeName, sellerUid }) {
           <Plus size={16} />
           Tambah produk
         </button>
+      </div>
+
+      {/* Info Pembayaran */}
+      <div className="border border-stone-200 rounded-2xl p-4 mb-4 bg-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-medium text-stone-800">Info Pembayaran Toko</p>
+            <p className="text-xs text-stone-400 mt-0.5">
+              {paymentInfo.noWa
+                ? `WA: ${paymentInfo.noWa} · Rekening: ${paymentInfo.bank} ${paymentInfo.noRek}`
+                : "Belum diisi — pembeli tidak bisa melakukan pembayaran"}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowPaymentForm(true)}
+            className="text-xs font-medium text-[#2F6B3C] border border-[#2F6B3C] rounded-xl px-3 py-2 hover:bg-[#F4E6C1]/40"
+          >
+            {paymentInfo.noWa ? "Edit" : "Isi sekarang"}
+          </button>
+        </div>
+        {paymentSaved && (
+          <p className="text-xs text-[#2F6B3C] mt-2 flex items-center gap-1">
+            <Check size={12} /> Info pembayaran tersimpan
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
@@ -1078,6 +1181,49 @@ function SellerDashboard({ products, storeName, sellerUid }) {
           onClose={() => setDiscountTarget(null)}
           onSave={saveDiscount}
         />
+      )}
+
+      {showPaymentForm && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-20 px-4">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-semibold text-stone-800">Info Pembayaran Toko</h2>
+              <button onClick={() => setShowPaymentForm(false)} className="w-9 h-9 rounded-xl border border-stone-200 flex items-center justify-center hover:bg-stone-50">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-stone-500 mb-1">Nomor WhatsApp</label>
+                <input value={paymentInfo.noWa} onChange={(e) => setPaymentInfo({ ...paymentInfo, noWa: e.target.value })}
+                  className="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2F6B3C]/30"
+                  placeholder="Contoh: 08123456789" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-stone-500 mb-1">Nama Bank / E-Wallet</label>
+                <input value={paymentInfo.bank} onChange={(e) => setPaymentInfo({ ...paymentInfo, bank: e.target.value })}
+                  className="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2F6B3C]/30"
+                  placeholder="Contoh: BCA / GoPay / OVO" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-stone-500 mb-1">Nomor Rekening / E-Wallet</label>
+                <input value={paymentInfo.noRek} onChange={(e) => setPaymentInfo({ ...paymentInfo, noRek: e.target.value })}
+                  className="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2F6B3C]/30"
+                  placeholder="Contoh: 1234567890" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-stone-500 mb-1">Atas Nama</label>
+                <input value={paymentInfo.atasNama} onChange={(e) => setPaymentInfo({ ...paymentInfo, atasNama: e.target.value })}
+                  className="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2F6B3C]/30"
+                  placeholder="Nama pemilik rekening" />
+              </div>
+              <button onClick={savePaymentInfo}
+                className="w-full bg-[#2F6B3C] text-white rounded-xl py-3 text-sm font-medium hover:bg-[#27572F] transition-colors">
+                Simpan Info Pembayaran
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
